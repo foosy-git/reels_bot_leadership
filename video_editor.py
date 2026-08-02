@@ -21,21 +21,28 @@ def crop_to_vertical(clip):
 
 def create_captions(audio_path):
     """
-    Uses faster-whisper to generate phrase-level timestamps.
+    Uses faster-whisper to generate short phrase-level timestamps (max 4 words).
     """
-    print("Generating phrase-level captions with whisper...")
+    print("Generating chunked captions with whisper...")
     # Use CPU by default to ensure it works everywhere, but int8 is fast
     model = WhisperModel("base", device="cpu", compute_type="int8")
     
-    segments, info = model.transcribe(audio_path, word_timestamps=False)
+    segments, info = model.transcribe(audio_path, word_timestamps=True)
     
     phrases = []
+    chunk_size = 4 # Maximum words to show on screen at once
+    
     for segment in segments:
-        phrases.append({
-            "text": segment.text.strip(),
-            "start": segment.start,
-            "end": segment.end
-        })
+        words = segment.words
+        for i in range(0, len(words), chunk_size):
+            chunk = words[i:i+chunk_size]
+            text = " ".join([w.word.strip() for w in chunk])
+            phrases.append({
+                "text": text,
+                "start": chunk[0].start,
+                "end": chunk[-1].end
+            })
+            
     return phrases
 
 def create_text_image(text, font_size, max_width, max_height):
@@ -117,7 +124,7 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path):
     # 4. Create Text Clips for each word using Pillow
     print("Generating caption overlays (no ImageMagick required)...")
     w, h = video.size
-    font_size = int(w * 0.08) # dynamic font size
+    font_size = int(w * 0.12) # 12% width for larger, more readable text
     
     subtitle_clips = []
     for word_info in words_data:
@@ -132,10 +139,10 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path):
         try:
             # Generate image with text using Pillow
             text_img = create_text_image(
-                word_info['text'].upper(), 
+                word_info['text'], # Normal case instead of upper()
                 font_size, 
-                int(w * 0.8), 
-                int(font_size * 2)
+                int(w * 0.9), # Allow 90% width
+                int(font_size * 3)
             )
             
             # Create an ImageClip from the numpy array
