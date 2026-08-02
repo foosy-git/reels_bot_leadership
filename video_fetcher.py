@@ -84,18 +84,25 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         # We can use subprocess to call the yt-dlp CLI directly, which has better support for EJS and remote components
         import subprocess
         
+        node_exec = os.environ.get("NODE_PATH_EXEC")
+        
         # Build the CLI command
         cli_command = [
             "yt-dlp",
             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4",
             "--cookies", "cookies.txt",
             "--ffmpeg-location", imageio_ffmpeg.get_ffmpeg_exe(),
-            "--extractor-args", "youtube:player_client=mweb",
+            "--extractor-args", "youtube:player_client=web",
             "--remote-components", "ejs:github", # Ensure EJS scripts are downloaded
             "--verbose", # So we can see exactly what fails
-            "-o", f"{download_dir}/%(id)s.%(ext)s",
-            video_url
+            "-o", f"{download_dir}/%(id)s.%(ext)s"
         ]
+        
+        if node_exec and node_exec.strip():
+            print(f"Explicitly passing Node executable: {node_exec}")
+            cli_command.extend(["--js-runtimes", f"node:{node_exec.strip()}"])
+            
+        cli_command.append(video_url)
         
         print("Running CLI command:", " ".join(cli_command))
         result = subprocess.run(cli_command, capture_output=True, text=True)
