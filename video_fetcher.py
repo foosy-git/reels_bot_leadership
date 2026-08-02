@@ -16,11 +16,12 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
     
     # MAGIC FIX: Bypasses YouTube Datacenter SABR and Bot Detection blocks
     ydl_opts = {
-        'format': 'bestvideo*+bestaudio/best',
-        'outtmpl': os.path.join(download_dir, '%(id)s.%(ext)s'),
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
+        'outtmpl': f'{download_dir}/%(id)s.%(ext)s',
         'skip_download': False,
         'noplaylist': True,
         'quiet': False,
+        'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
         'extractor_args': {
             'youtube': {
