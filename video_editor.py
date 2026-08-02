@@ -107,16 +107,22 @@ def create_text_image(text, font_size, max_width, max_height):
     x = (max_width - text_w) / 2
     y = (target_h - text_h) / 2
     
-    # Draw outline (stroke)
-    outline_color = "black"
-    stroke_width = 2
-    for dx in range(-stroke_width, stroke_width+1):
-        for dy in range(-stroke_width, stroke_width+1):
-            if dx != 0 or dy != 0:
-                d.multiline_text((x+dx, y+dy), wrapped_text, font=font, fill=outline_color, align="center")
-                
-    # Draw main text
-    d.multiline_text((x, y), wrapped_text, font=font, fill="white", align="center")
+    # Modern highly readable styling (Hormozi style)
+    text_color = "#FFFF00" # Punchy yellow
+    stroke_color = "black"
+    # Stroke should scale with font size to always be visible (about 6% of font size)
+    stroke_w = max(3, font_size // 12)
+    
+    # Draw main text with thick stroke
+    d.multiline_text(
+        (x, y), 
+        wrapped_text, 
+        font=font, 
+        fill=text_color, 
+        align="center",
+        stroke_width=stroke_w,
+        stroke_fill=stroke_color
+    )
     
     return np.array(img)
 
@@ -161,7 +167,7 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path):
         try:
             # Generate image with text using Pillow
             text_img = create_text_image(
-                word_info['text'], # Normal case instead of upper()
+                word_info['text'].upper(), # ALL CAPS for readability
                 font_size, 
                 int(w * 0.9), # Allow 90% width
                 int(font_size * 3)
