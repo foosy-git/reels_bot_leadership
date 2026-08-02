@@ -19,7 +19,9 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         'skip_download': False,      # We want the video
         'noplaylist': True,
         'quiet': False,
-        'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe() # Point to the python-installed ffmpeg
+        'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(), # Point to the python-installed ffmpeg
+        'impersonate': True, # Bypass YouTube bot block using curl-cffi
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}} # Use mobile client to bypass strict blocks
     }
     
     # Just search to get IDs first
