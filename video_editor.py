@@ -108,8 +108,14 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path):
     """
     Clips, crops, transcribes, and overlays captions on the video.
     """
-    print(f"Loading video from {start_time} to {end_time}...")
-    video = VideoFileClip(input_path).subclip(start_time, end_time)
+    video = VideoFileClip(input_path)
+    
+    # Clamp end_time to the actual video duration to prevent out-of-bounds errors
+    if end_time > video.duration:
+        end_time = video.duration
+        
+    print(f"Loading video from {start_time} to {end_time} (Total Duration: {video.duration}s)...")
+    video = video.subclip(start_time, end_time)
     
     # 1. Crop to Vertical
     video = crop_to_vertical(video)
