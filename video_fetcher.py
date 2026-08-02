@@ -21,7 +21,7 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         'skip_download': False,
         'noplaylist': True,
         'quiet': False,
-        'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
+        'cookiefile': 'cookies.txt',
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
         'extractor_args': {
             'youtube': {
