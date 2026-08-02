@@ -21,7 +21,7 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         'quiet': False,
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(), # Point to the python-installed ffmpeg
         'cookiefile': 'cookies.txt', # Essential for GCP IPs
-        'extractor_args': {'youtube': {'player_client': ['android', 'web']}} # Use mobile client to bypass strict blocks
+        'extractor_args': {'youtube': {'player_client': ['web_safari', 'mweb']}} # Use Safari/Mobile Web to bypass PO Token requirements
     }
     
     # Just search to get IDs first
