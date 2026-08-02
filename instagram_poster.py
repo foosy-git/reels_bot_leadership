@@ -12,25 +12,23 @@ load_dotenv()
 def upload_to_temp_host(local_path):
     """
     Facebook Graph API requires a public URL for the video. 
-    If you are running locally, we upload it to catbox.moe for Instagram to fetch.
+    If you are running locally, we upload it to uguu.se for Instagram to fetch.
     """
-    print("Uploading video to a temporary public host (catbox.moe) for Instagram to fetch...")
-    url = "https://catbox.moe/user/api.php"
-    
-    data = {
-        'reqtype': 'fileupload'
-    }
+    print("Uploading video to a temporary public host (uguu.se) for Instagram to fetch...")
+    url = "https://uguu.se/upload.php"
     
     with open(local_path, 'rb') as f:
-        files = {'fileToUpload': f}
-        response = requests.post(url, data=data, files=files)
+        files = {'files[]': f}
+        response = requests.post(url, files=files)
         
-    if response.status_code == 200 and response.text.startswith("http"):
-        public_url = response.text.strip()
-        print(f"Temporary public URL: {public_url}")
-        return public_url
-    else:
-        raise Exception(f"Failed to upload to temp host: Status {response.status_code}, {response.text}")
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success") and len(data.get("files", [])) > 0:
+            public_url = data["files"][0]["url"]
+            print(f"Temporary public URL: {public_url}")
+            return public_url
+    
+    raise Exception(f"Failed to upload to temp host: Status {response.status_code}, {response.text}")
 
 def post_reel(local_video_path, caption):
     """
