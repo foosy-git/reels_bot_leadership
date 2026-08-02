@@ -4,7 +4,7 @@ import schedule
 import random
 from dotenv import load_dotenv
 
-from youtube_fetcher import get_latest_video
+from video_fetcher import get_latest_video
 from clip_analyzer import find_best_clip
 from video_editor import edit_and_caption_video
 from instagram_poster import post_reel
@@ -23,8 +23,8 @@ def run_bot():
             print("Failed to fetch video.")
             return
             
-        # 3. Analyze for best clip and generate caption
-        start_time, end_time, caption = find_best_clip(vtt_path)
+        # 3. Analyze for best clip and generate caption using Gemini Vision
+        start_time, end_time, caption = find_best_clip(video_path)
         
         # 4. Edit Video
         output_file = f"final_reel_{int(time.time())}.mp4"
