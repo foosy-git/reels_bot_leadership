@@ -19,6 +19,11 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         'quiet': False,
         'cookiefile': 'cookies.txt',
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['web']
+            }
+        },
         'source_address': '0.0.0.0', # Force IPv4
     }
     
