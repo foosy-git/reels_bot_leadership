@@ -66,7 +66,7 @@ def find_best_clip(vtt_path):
     It should have a strong hook at the beginning and a satisfying conclusion.
     
     Respond ONLY with a JSON object in this format:
-    {{"start_time": <start_second_as_int>, "end_time": <end_second_as_int>, "reason": "<brief_reason>"}}
+    {{"start_time": <start_second_as_int>, "end_time": <end_second_as_int>, "reason": "<brief_reason>", "instagram_caption": "<a highly detailed, engaging caption with a hook and 5-8 relevant hashtags based EXACTLY on what was said>"}}
     
     Transcript:
     {transcript[:30000]} # Limit to first ~30k chars to avoid token limits just in case
@@ -93,16 +93,17 @@ def find_best_clip(vtt_path):
         
         start = float(data.get('start_time', 0))
         end = float(data.get('end_time', 60))
+        caption = data.get('instagram_caption', "Powerful leadership insight! 💡\n\n#leadership #growth #motivation")
         
         # Ensure it's not too long
         if end - start > 90:
             end = start + 60
             
         print(f"Found clip from {start}s to {end}s. Reason: {data.get('reason')}")
-        return start, end
+        return start, end, caption
     except Exception as e:
         print(f"Error during LLM analysis: {e}. Defaulting to first 60s.")
-        return 0.0, 60.0
+        return 0.0, 60.0, "Powerful leadership insight! 💡\n\n#leadership #growth #motivation"
 
 if __name__ == "__main__":
     # Test script

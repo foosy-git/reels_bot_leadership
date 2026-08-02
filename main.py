@@ -23,15 +23,14 @@ def run_bot():
             print("Failed to fetch video.")
             return
             
-        # 3. Analyze for best clip
-        start_time, end_time = find_best_clip(vtt_path)
+        # 3. Analyze for best clip and generate caption
+        start_time, end_time, caption = find_best_clip(vtt_path)
         
         # 4. Edit Video
         output_file = f"final_reel_{int(time.time())}.mp4"
         edit_and_caption_video(video_path, start_time, end_time, output_file)
         
         # 5. Post to Instagram
-        caption = f"Powerful insight from {creator}! 💡\n\n#leadership #motivation #{creator.replace(' ', '')} #shorts"
         post_reel(output_file, caption)
         
         # Clean up
