@@ -1,0 +1,158 @@
+import os
+from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip, ColorClip
+from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+from faster_whisper import WhisperModel
+
+def crop_to_vertical(clip):
+    """Crops a standard 16:9 video to 9:16 vertical format (center crop)."""
+    w, h = clip.size
+    target_ratio = 9 / 16
+    
+    # If the video is already vertical or close to it, just return
+    if w / h <= target_ratio + 0.1:
+        return clip
+        
+    target_w = int(h * target_ratio)
+    x_center = w / 2
+    
+    # crop(x1, y1, x2, y2)
+    return clip.crop(x1=x_center - target_w/2, y1=0, x2=x_center + target_w/2, y2=h)
+
+def create_captions(audio_path):
+    """
+    Uses faster-whisper to generate word-level timestamps.
+    """
+    print("Generating word-level captions with whisper...")
+    # Use CPU by default to ensure it works everywhere, but int8 is fast
+    model = WhisperModel("base", device="cpu", compute_type="int8")
+    
+    segments, info = model.transcribe(audio_path, word_timestamps=True)
+    
+    words = []
+    for segment in segments:
+        for word in segment.words:
+            words.append({
+                "text": word.word.strip(),
+                "start": word.start,
+                "end": word.end
+            })
+    return words
+
+def create_text_image(text, font_size, max_width, max_height):
+    """Creates a transparent image with text using Pillow."""
+    img = Image.new('RGBA', (max_width, max_height), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    
+    try:
+        font = ImageFont.truetype("impact.ttf", font_size)
+    except IOError:
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except IOError:
+            font = ImageFont.load_default()
+            
+    # Calculate text bounding box
+    bbox = d.textbbox((0, 0), text, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+    
+    # Center text in the image box
+    x = (max_width - text_w) / 2
+    y = (max_height - text_h) / 2
+    
+    # Draw outline (stroke)
+    outline_color = "black"
+    stroke_width = 2
+    for dx in range(-stroke_width, stroke_width+1):
+        for dy in range(-stroke_width, stroke_width+1):
+            if dx != 0 or dy != 0:
+                d.text((x+dx, y+dy), text, font=font, fill=outline_color)
+                
+    # Draw main text
+    d.text((x, y), text, font=font, fill="white")
+    
+    return np.array(img)
+
+def edit_and_caption_video(input_path, start_time, end_time, output_path):
+    """
+    Clips, crops, transcribes, and overlays captions on the video.
+    """
+    print(f"Loading video from {start_time} to {end_time}...")
+    video = VideoFileClip(input_path).subclip(start_time, end_time)
+    
+    # 1. Crop to Vertical
+    video = crop_to_vertical(video)
+    
+    # 2. Extract Audio for transcription
+    temp_audio = "temp_audio.wav"
+    video.audio.write_audiofile(temp_audio, logger=None)
+    
+    # 3. Get Word-level timestamps
+    words_data = create_captions(temp_audio)
+    
+    # 4. Create Text Clips for each word using Pillow
+    print("Generating caption overlays (no ImageMagick required)...")
+    w, h = video.size
+    font_size = int(w * 0.08) # dynamic font size
+    
+    subtitle_clips = []
+    for word_info in words_data:
+        start = word_info['start']
+        end = word_info['end']
+        duration = end - start
+        
+        # Ensure a minimum duration so it doesn't flicker too fast
+        if duration < 0.1:
+            duration = 0.1
+            
+        try:
+            # Generate image with text using Pillow
+            text_img = create_text_image(
+                word_info['text'].upper(), 
+                font_size, 
+                int(w * 0.8), 
+                int(font_size * 2)
+            )
+            
+            # Create an ImageClip from the numpy array
+            txt_clip = ImageClip(text_img).set_duration(duration)
+            
+            # Position it at the center-bottom
+            txt_clip = txt_clip.set_position(('center', h*0.7))
+            txt_clip = txt_clip.set_start(start)
+            
+            subtitle_clips.append(txt_clip)
+        except Exception as e:
+            print(f"Failed to create TextClip for word '{word_info['text']}'. Error: {e}")
+            break
+            
+    # 5. Composite video and subtitles
+    if subtitle_clips:
+        final_video = CompositeVideoClip([video] + subtitle_clips)
+    else:
+        final_video = video
+        
+    print(f"Exporting final reel to {output_path}...")
+    # Fast rendering settings
+    final_video.write_videofile(
+        output_path,
+        codec='libx264',
+        audio_codec='aac',
+        temp_audiofile='temp-audio.m4a',
+        remove_temp=True,
+        logger=None,
+        threads=4,
+        preset='fast'
+    )
+    
+    # Cleanup
+    if os.path.exists(temp_audio):
+        os.remove(temp_audio)
+        
+    video.close()
+    if subtitle_clips:
+        final_video.close()
+
+if __name__ == "__main__":
+    pass

@@ -1,0 +1,26 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Videos and temporary files
+downloads/
+*.mp4
+*.m4a
+*.wav
+*.vtt
+temp_audio.wav
+final_reel_*.mp4
+
+# OS generated files
+.DS_Store
+Thumbs.db
