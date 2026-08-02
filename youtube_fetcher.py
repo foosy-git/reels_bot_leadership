@@ -20,7 +20,7 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         'noplaylist': True,
         'quiet': False,
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(), # Point to the python-installed ffmpeg
-        'impersonate': True, # Bypass YouTube bot block using curl-cffi
+        'impersonate': 'chrome', # Bypass YouTube bot block using curl-cffi
         'extractor_args': {'youtube': {'player_client': ['android', 'web']}} # Use mobile client to bypass strict blocks
     }
     
