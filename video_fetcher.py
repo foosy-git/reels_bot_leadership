@@ -89,17 +89,19 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=True)
-            video_id = info.get('id', 'unknown')
-            video_path = os.path.join(download_dir, f"{video_id}.mp4")
+            
+            if 'requested_downloads' in info and len(info['requested_downloads']) > 0:
+                video_path = info['requested_downloads'][0]['filepath']
+            else:
+                # If requested_downloads is missing, fallback to ext
+                video_id = info.get('id', 'unknown')
+                ext = info.get('ext', 'mp4')
+                video_path = os.path.join(download_dir, f"{video_id}.{ext}")
             
             if not os.path.exists(video_path):
-                # Fallback: find the most recently created file in downloads
-                files = [os.path.join(download_dir, f) for f in os.listdir(download_dir)]
-                files.sort(key=os.path.getctime, reverse=True)
-                if files:
-                    video_path = files[0]
+                print(f"Warning: Expected video path {video_path} does not exist.")
                     
-            print("Download completed successfully!")
+            print(f"Download completed successfully! Saved to {video_path}")
             return video_path, None, title
             
     except Exception as e:
