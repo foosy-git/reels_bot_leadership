@@ -21,29 +21,25 @@ def crop_to_vertical(clip):
 
 def create_captions(audio_path):
     """
-    Uses faster-whisper to generate word-level timestamps.
+    Uses faster-whisper to generate phrase-level timestamps.
     """
-    print("Generating word-level captions with whisper...")
+    print("Generating phrase-level captions with whisper...")
     # Use CPU by default to ensure it works everywhere, but int8 is fast
     model = WhisperModel("base", device="cpu", compute_type="int8")
     
-    segments, info = model.transcribe(audio_path, word_timestamps=True)
+    segments, info = model.transcribe(audio_path, word_timestamps=False)
     
-    words = []
+    phrases = []
     for segment in segments:
-        for word in segment.words:
-            words.append({
-                "text": word.word.strip(),
-                "start": word.start,
-                "end": word.end
-            })
-    return words
+        phrases.append({
+            "text": segment.text.strip(),
+            "start": segment.start,
+            "end": segment.end
+        })
+    return phrases
 
 def create_text_image(text, font_size, max_width, max_height):
-    """Creates a transparent image with text using Pillow."""
-    img = Image.new('RGBA', (max_width, max_height), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    
+    """Creates a transparent image with wrapped text using Pillow."""
     try:
         font = ImageFont.truetype("impact.ttf", font_size)
     except IOError:
@@ -51,15 +47,42 @@ def create_text_image(text, font_size, max_width, max_height):
             font = ImageFont.truetype("arial.ttf", font_size)
         except IOError:
             font = ImageFont.load_default()
+
+    # Create dummy image to calculate text wrapping
+    dummy_img = Image.new('RGBA', (1, 1))
+    d = ImageDraw.Draw(dummy_img)
             
-    # Calculate text bounding box
-    bbox = d.textbbox((0, 0), text, font=font)
+    # Wrap text manually
+    words = text.split()
+    lines = []
+    current_line = ""
+    for word in words:
+        test_line = current_line + " " + word if current_line else word
+        bbox = d.textbbox((0, 0), test_line, font=font)
+        if (bbox[2] - bbox[0]) <= max_width:
+            current_line = test_line
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+        
+    wrapped_text = "\n".join(lines)
+    
+    # Calculate bounding box of the multiline text
+    bbox = d.multiline_textbbox((0, 0), wrapped_text, font=font, align="center")
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
     
+    # Make the image canvas large enough to hold all the lines
+    target_h = max(max_height, text_h + 20)
+    img = Image.new('RGBA', (max_width, target_h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    
     # Center text in the image box
     x = (max_width - text_w) / 2
-    y = (max_height - text_h) / 2
+    y = (target_h - text_h) / 2
     
     # Draw outline (stroke)
     outline_color = "black"
@@ -67,10 +90,10 @@ def create_text_image(text, font_size, max_width, max_height):
     for dx in range(-stroke_width, stroke_width+1):
         for dy in range(-stroke_width, stroke_width+1):
             if dx != 0 or dy != 0:
-                d.text((x+dx, y+dy), text, font=font, fill=outline_color)
+                d.multiline_text((x+dx, y+dy), wrapped_text, font=font, fill=outline_color, align="center")
                 
     # Draw main text
-    d.text((x, y), text, font=font, fill="white")
+    d.multiline_text((x, y), wrapped_text, font=font, fill="white", align="center")
     
     return np.array(img)
 
