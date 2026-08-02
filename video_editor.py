@@ -169,11 +169,12 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path):
         output_path,
         codec='libx264',
         audio_codec='aac',
-        temp_audiofile='temp-audio.m4a',
+        temp_audiofile="temp_audio.m4a",
         remove_temp=True,
-        logger="bar",
-        threads=4,
-        preset='fast'
+        fps=30,
+        logger="bar", # Enable progress bar so it doesn't look stuck
+        threads=1,
+        preset="ultrafast"
     )
     
     # Cleanup
