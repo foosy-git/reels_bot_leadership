@@ -1,15 +1,14 @@
 import os
 import json
 import time
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def find_best_clip(video_path):
     """
-    Uses Gemini File API to upload the raw video and analyze it.
+    Uses the new Google GenAI SDK to upload the raw video and analyze it.
     Finds the most engaging 30-60 second clip.
     Returns the start and end time in seconds, and an instagram caption.
     """
@@ -20,15 +19,18 @@ def find_best_clip(video_path):
     print(f"Uploading {video_path} to Gemini for native video analysis...")
     
     try:
-        # Upload the video file
-        video_file = genai.upload_file(path=video_path)
+        # The new SDK requires initializing a client
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         
-        # Wait for Gemini to process the video (can take a minute or two)
+        # Upload the video file
+        video_file = client.files.upload(file=video_path)
+        
+        # Wait for Gemini to process the video
         print("Waiting for Gemini to process the video...")
         while video_file.state.name == 'PROCESSING':
             print('.', end='', flush=True)
             time.sleep(10)
-            video_file = genai.get_file(video_file.name)
+            video_file = client.files.get(name=video_file.name)
             
         if video_file.state.name == 'FAILED':
             print("\nGemini video processing failed.")
@@ -46,9 +48,10 @@ def find_best_clip(video_path):
         {"start_time": <start_second_as_int>, "end_time": <end_second_as_int>, "reason": "<brief_reason>", "instagram_caption": "<a highly detailed, engaging caption with a hook and 5-8 relevant hashtags based EXACTLY on what was said>"}
         """
         
-        # We use gemini-1.5-pro for video understanding as it is highly capable
-        model = genai.GenerativeModel('gemini-1.5-pro-latest')
-        response = model.generate_content([video_file, prompt])
+        response = client.models.generate_content(
+            model='gemini-1.5-pro-latest',
+            contents=[video_file, prompt]
+        )
         
         text_resp = response.text
         
@@ -67,7 +70,7 @@ def find_best_clip(video_path):
         print(f"Found clip from {start}s to {end}s. Reason: {data.get('reason')}")
         
         # Clean up the file from Google's servers
-        genai.delete_file(video_file.name)
+        client.files.delete(name=video_file.name)
         
         return start, end, caption
         
