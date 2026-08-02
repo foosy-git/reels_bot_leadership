@@ -171,7 +171,7 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path):
         audio_codec='aac',
         temp_audiofile='temp-audio.m4a',
         remove_temp=True,
-        logger=None,
+        logger="bar",
         threads=4,
         preset='fast'
     )
