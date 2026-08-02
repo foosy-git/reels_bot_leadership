@@ -20,8 +20,7 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         'noplaylist': True,
         'quiet': False,
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(), # Point to the python-installed ffmpeg
-        'username': 'oauth2', # REQUIRED: Cookies are dead on headless servers
-        'extractor_args': {'youtube': {'player_client': ['tv', 'android']}} # TV and Android do not require PO Tokens or JS runtimes
+        'extractor_args': {'youtube': {'player_client': ['ios', 'android']}} # Flawless on residential IPs
     }
     
     # Just search to get IDs first
