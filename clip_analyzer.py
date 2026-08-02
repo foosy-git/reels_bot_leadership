@@ -49,7 +49,7 @@ def find_best_clip(video_path):
         """
         
         response = client.models.generate_content(
-            model='gemini-1.5-pro-latest',
+            model='gemini-2.5-flash',
             contents=[video_file, prompt]
         )
         
