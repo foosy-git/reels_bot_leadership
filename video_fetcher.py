@@ -21,7 +21,7 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
         'ffmpeg_location': imageio_ffmpeg.get_ffmpeg_exe(),
         'extractor_args': {
             'youtube': {
-                'player_client': ['web']
+                'player_client': ['mweb']
             }
         },
         'source_address': '0.0.0.0', # Force IPv4
