@@ -4,8 +4,8 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from faster_whisper import WhisperModel
 
-def crop_to_vertical(clip):
-    """Crops a standard 16:9 video to 9:16 vertical format (center crop)."""
+def crop_to_vertical(clip, speaker_pos="center"):
+    """Crops a standard 16:9 video to 9:16 vertical format based on speaker position."""
     w, h = clip.size
     target_ratio = 9 / 16
     
@@ -14,10 +14,26 @@ def crop_to_vertical(clip):
         return clip
         
     target_w = int(h * target_ratio)
-    x_center = w / 2
     
+    if speaker_pos == "left":
+        x_center = w * 0.25
+    elif speaker_pos == "right":
+        x_center = w * 0.75
+    else:
+        x_center = w / 2
+        
+    # Ensure crop doesn't go out of bounds
+    x1 = max(0, x_center - target_w/2)
+    x2 = min(w, x_center + target_w/2)
+    
+    # If out of bounds, adjust the other side to maintain width
+    if x1 == 0:
+        x2 = target_w
+    elif x2 == w:
+        x1 = w - target_w
+        
     # crop(x1, y1, x2, y2)
-    return clip.crop(x1=x_center - target_w/2, y1=0, x2=x_center + target_w/2, y2=h)
+    return clip.crop(x1=x1, y1=0, x2=x2, y2=h)
 
 def create_captions(audio_path):
     """
@@ -125,7 +141,7 @@ def create_text_image(text, font_size, max_width, max_height):
     
     return np.array(img)
 
-def edit_and_caption_video(input_path, start_time, end_time, output_path):
+def edit_and_caption_video(input_path, start_time, end_time, output_path, speaker_pos="center"):
     """
     Clips, crops, transcribes, and overlays captions on the video.
     """
@@ -138,8 +154,9 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path):
     print(f"Loading video from {start_time} to {end_time} (Total Duration: {video.duration}s)...")
     video = video.subclip(start_time, end_time)
     
-    # 1. Crop to Vertical
-    video = crop_to_vertical(video)
+    # 1. Crop to Vertical based on speaker position
+    print(f"Cropping video for {speaker_pos} speaker...")
+    video = crop_to_vertical(video, speaker_pos)
     
     # 2. Extract Audio for transcription
     temp_audio = "temp_audio.wav"

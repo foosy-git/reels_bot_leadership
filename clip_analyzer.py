@@ -43,9 +43,10 @@ def find_best_clip(video_path):
         Watch this entire video.
         Find the most engaging, viral, and insightful continuous segment that is between 30 and 60 seconds long.
         It should have a strong hook at the beginning and a satisfying conclusion.
+        Also determine the position of the primary speaker in the video frame so we can crop it perfectly to 9:16 vertical format.
         
         Respond ONLY with a JSON object in this EXACT format:
-        {"start_time": <start_second_as_int>, "end_time": <end_second_as_int>, "reason": "<brief_reason>", "instagram_caption": "<a highly detailed, engaging caption with a hook and 5-8 relevant hashtags based EXACTLY on what was said>"}
+        {"start_time": <start_second_as_int>, "end_time": <end_second_as_int>, "speaker_position": "<left, center, or right>", "reason": "<brief_reason>", "instagram_caption": "<a highly detailed, engaging caption with a hook and 5-8 relevant hashtags based EXACTLY on what was said>"}
         """
         
         response = client.models.generate_content(
@@ -61,6 +62,7 @@ def find_best_clip(video_path):
         
         start = float(data.get('start_time', 0))
         end = float(data.get('end_time', 60))
+        speaker_pos = data.get('speaker_position', 'center').lower()
         caption = data.get('instagram_caption', "Powerful leadership insight! 💡\n\n#leadership #growth #motivation")
         
         # Ensure it's not too long
@@ -72,11 +74,11 @@ def find_best_clip(video_path):
         # Clean up the file from Google's servers
         client.files.delete(name=video_file.name)
         
-        return start, end, caption
+        return start, end, caption, speaker_pos
         
     except Exception as e:
         print(f"Error during LLM video analysis: {e}. Defaulting to first 60s.")
-        return 0.0, 60.0, "Powerful leadership insight! 💡\n\n#leadership #growth #motivation"
+        return 0.0, 60.0, "Powerful leadership insight! 💡\n\n#leadership #growth #motivation", "center"
 
 if __name__ == "__main__":
     pass

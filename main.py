@@ -24,11 +24,11 @@ def run_bot():
             return
             
         # 3. Analyze for best clip and generate caption using Gemini Vision
-        start_time, end_time, caption = find_best_clip(video_path)
+        start_time, end_time, caption, speaker_pos = find_best_clip(video_path)
         
         # 4. Edit Video
         output_file = f"final_reel_{int(time.time())}.mp4"
-        edit_and_caption_video(video_path, start_time, end_time, output_file)
+        edit_and_caption_video(video_path, start_time, end_time, output_file, speaker_pos)
         
         # 5. Post to Instagram
         post_reel(output_file, caption)
