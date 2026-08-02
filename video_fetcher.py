@@ -26,6 +26,8 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
             }
         },
         'source_address': '0.0.0.0', # Force IPv4
+        'js_runtimes': ['node'], # Enable PO Token generation
+        'remote_components': ['ejs:github'],
     }
     
     # Pre-defined channel maps to avoid `ytsearch:` 403 errors
