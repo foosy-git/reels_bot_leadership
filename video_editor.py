@@ -53,7 +53,23 @@ def create_text_image(text, font_size, max_width, max_height):
         try:
             font = ImageFont.truetype("arial.ttf", font_size)
         except IOError:
-            font = ImageFont.load_default()
+            # Fallbacks for Linux
+            linux_fonts = [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+                "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf"
+            ]
+            font_loaded = False
+            for lf in linux_fonts:
+                if os.path.exists(lf):
+                    font = ImageFont.truetype(lf, font_size)
+                    font_loaded = True
+                    break
+            
+            if not font_loaded:
+                # If all else fails, use the default bitmap font (which will be tiny)
+                print("WARNING: No TTF fonts found! Subtitles will be very small. Install fonts to fix this.")
+                font = ImageFont.load_default()
 
     # Create dummy image to calculate text wrapping
     dummy_img = Image.new('RGBA', (1, 1))
