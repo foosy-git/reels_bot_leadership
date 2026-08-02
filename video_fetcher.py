@@ -3,6 +3,23 @@ import yt_dlp
 import random
 import imageio_ffmpeg
 import time
+import json
+
+def load_history():
+    if os.path.exists('history.json'):
+        try:
+            with open('history.json', 'r') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_to_history(video_id):
+    history = load_history()
+    if video_id not in history:
+        history.append(video_id)
+        with open('history.json', 'w') as f:
+            json.dump(history, f)
 
 def get_latest_video(search_query, max_results=10, download_dir="downloads"):
     """
@@ -50,7 +67,16 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
                     videos = list(result['entries'])
                     if not videos:
                         return None, None, None
-                    video = random.choice(videos)
+                        
+                    # Filter out already processed videos
+                    history = load_history()
+                    unseen_videos = [v for v in videos if v.get('id') not in history]
+                    
+                    if not unseen_videos:
+                        print(f"No new unseen videos found for {search_query}.")
+                        return None, None, None
+                        
+                    video = random.choice(unseen_videos)
                     video_url = f"https://www.youtube.com/watch?v={video.get('id')}"
                     title = video.get('title')
         except Exception as e:
@@ -69,7 +95,15 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
                     videos = list(result['entries'])
                     if not videos:
                         return None, None, None
-                    video = random.choice(videos)
+                        
+                    history = load_history()
+                    unseen_videos = [v for v in videos if v.get('id') not in history]
+                    
+                    if not unseen_videos:
+                        print(f"No new unseen videos found for {search_query}.")
+                        return None, None, None
+                        
+                    video = random.choice(unseen_videos)
                     video_url = f"https://www.youtube.com/watch?v={video.get('id')}"
                     title = video.get('title')
         except Exception as e:
@@ -120,6 +154,7 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
             
             if os.path.exists(video_path):
                 print(f"Download completed successfully! Saved to {video_path}")
+                save_to_history(video_id)
                 return video_path, None, title
             else:
                 print(f"Warning: yt-dlp succeeded but expected video path {video_path} does not exist.")

@@ -168,7 +168,7 @@ def edit_and_caption_video(input_path, start_time, end_time, output_path, speake
     # 4. Create Text Clips for each word using Pillow
     print("Generating caption overlays (no ImageMagick required)...")
     w, h = video.size
-    font_size = int(w * 0.18) # 18% width for huge, highly readable text
+    font_size = int(w * 0.10) # Reduced to 10% width so subtitles are smaller and more readable
     
     subtitle_clips = []
     for word_info in words_data:

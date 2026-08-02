@@ -18,7 +18,7 @@ def run_bot():
     
     try:
         # 2. Fetch Video
-        video_path, vtt_path, title = get_latest_video(creator, max_results=10)
+        video_path, vtt_path, title = get_latest_video(creator, max_results=50)
         if not video_path:
             print("Failed to fetch video.")
             return
