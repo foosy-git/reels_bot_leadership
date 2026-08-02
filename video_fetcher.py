@@ -80,22 +80,46 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
     print("Downloading video natively (bypassing datacenter blocks)...")
     
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
+        # We need the video ID and ext to match outtmpl
+        # We can use subprocess to call the yt-dlp CLI directly, which has better support for EJS and remote components
+        import subprocess
+        
+        # Build the CLI command
+        cli_command = [
+            "yt-dlp",
+            "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4",
+            "--cookies", "cookies.txt",
+            "--ffmpeg-location", imageio_ffmpeg.get_ffmpeg_exe(),
+            "--extractor-args", "youtube:player_client=mweb",
+            "--remote-components", "ejs:github", # Ensure EJS scripts are downloaded
+            "--verbose", # So we can see exactly what fails
+            "-o", f"{download_dir}/%(id)s.%(ext)s",
+            video_url
+        ]
+        
+        print("Running CLI command:", " ".join(cli_command))
+        result = subprocess.run(cli_command, capture_output=True, text=True)
+        
+        print("CLI Output:")
+        print(result.stdout)
+        if result.stderr:
+            print("CLI Error Output:")
+            print(result.stderr)
             
-            if 'requested_downloads' in info and len(info['requested_downloads']) > 0:
-                video_path = info['requested_downloads'][0]['filepath']
+        if result.returncode == 0:
+            # Try to find the downloaded file
+            video_id = video_url.split("v=")[-1]
+            video_path = os.path.join(download_dir, f"{video_id}.mp4")
+            
+            if os.path.exists(video_path):
+                print(f"Download completed successfully! Saved to {video_path}")
+                return video_path, None, title
             else:
-                # If requested_downloads is missing, fallback to ext
-                video_id = info.get('id', 'unknown')
-                ext = info.get('ext', 'mp4')
-                video_path = os.path.join(download_dir, f"{video_id}.{ext}")
+                print(f"Warning: yt-dlp succeeded but expected video path {video_path} does not exist.")
+        else:
+            print(f"yt-dlp CLI failed with return code {result.returncode}")
             
-            if not os.path.exists(video_path):
-                print(f"Warning: Expected video path {video_path} does not exist.")
-                    
-            print(f"Download completed successfully! Saved to {video_path}")
-            return video_path, None, title
+        return None, None, None
             
     except Exception as e:
         print(f"Failed to download video: {e}")
