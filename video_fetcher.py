@@ -11,7 +11,6 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
     """
     os.makedirs(download_dir, exist_ok=True)
     
-    # MAGIC FIX: Bypasses YouTube Datacenter SABR and Bot Detection blocks
     ydl_opts = {
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
         'outtmpl': f'{download_dir}/%(id)s.%(ext)s',
