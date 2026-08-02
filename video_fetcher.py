@@ -4,6 +4,9 @@ import random
 import imageio_ffmpeg
 import time
 
+# Required for Datacenter Bot Bypass Mode B
+os.environ["YT_DLP_POT_PROVIDER_URL"] = "http://127.0.0.1:4416"
+
 def get_latest_video(search_query, max_results=10, download_dir="downloads"):
     """
     Searches YouTube natively bypassing datacenter blocks.
