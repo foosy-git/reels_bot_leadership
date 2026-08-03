@@ -47,7 +47,8 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
     # Pre-defined channel maps to avoid `ytsearch:` 403 errors
     channel_map = {
         "simon sinek": "https://www.youtube.com/@SimonSinek/videos",
-        "john maxwell": "https://www.youtube.com/@JohnMaxwellCo/videos"
+        "john maxwell": "https://www.youtube.com/@JohnMaxwellCo/videos",
+        "mel robbins": "https://www.youtube.com/@melrobbins/videos"
     }
     
     search_url = channel_map.get(search_query.lower().strip())

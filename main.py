@@ -13,7 +13,7 @@ def run_bot():
     print(f"--- Starting Reels Bot at {time.ctime()} ---")
     
     # 1. Pick a creator
-    creators = ["Simon Sinek", "John Maxwell"]
+    creators = ["Simon Sinek", "John Maxwell", "Mel Robbins"]
     creator = random.choice(creators)
     
     try:
