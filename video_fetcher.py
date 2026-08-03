@@ -125,6 +125,9 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
             "yt-dlp",
             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4",
             "--cookies", "cookies.txt",
+            "--write-auto-subs",
+            "--write-subs",
+            "--sub-langs", "en",
             "--ffmpeg-location", imageio_ffmpeg.get_ffmpeg_exe(),
             "--extractor-args", "youtube:player_client=web",
             "--remote-components", "ejs:github", # Ensure EJS scripts are downloaded
@@ -152,10 +155,17 @@ def get_latest_video(search_query, max_results=10, download_dir="downloads"):
             video_id = video_url.split("v=")[-1]
             video_path = os.path.join(download_dir, f"{video_id}.mp4")
             
+            # Subtitle could be .en.vtt or just .vtt
+            vtt_path = os.path.join(download_dir, f"{video_id}.en.vtt")
+            if not os.path.exists(vtt_path):
+                vtt_path = os.path.join(download_dir, f"{video_id}.vtt")
+                if not os.path.exists(vtt_path):
+                    vtt_path = None
+            
             if os.path.exists(video_path):
                 print(f"Download completed successfully! Saved to {video_path}")
                 save_to_history(video_id)
-                return video_path, None, title
+                return video_path, vtt_path, title
             else:
                 print(f"Warning: yt-dlp succeeded but expected video path {video_path} does not exist.")
         else:
